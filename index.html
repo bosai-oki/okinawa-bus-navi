@@ -41,7 +41,8 @@
       expandedId: null,
       currentTime: new Date(),
       dayType: getDayType(new Date()),
-      minStops: 0  // 最短ルートの停留所数
+      minStops: 0,
+      showAbout: false  // 留意事項の表示状態
     };
 
     // ==========================================
@@ -171,6 +172,16 @@
       render();
     }
 
+    function toggleAbout() {
+      state.showAbout = !state.showAbout;
+      render();
+      if (state.showAbout) {
+        setTimeout(() => {
+          document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+
     // ==========================================
     // レンダリング
     // ==========================================
@@ -181,7 +192,7 @@
       const toStop = BUS_DATA.stops.find(s => s.id === state.to);
       
       app.innerHTML = `
-        <div class="max-w-lg mx-auto p-4">
+        <div class="max-w-lg mx-auto p-4 pb-8">
           
           <!-- ヘッダー -->
           <div class="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl shadow-lg p-6 mb-6 text-white">
@@ -267,22 +278,113 @@
 
           ${state.results !== null ? renderResults() : ''}
 
-          <!-- データクレジット -->
-          <div class="mt-8 bg-white rounded-xl p-4 text-xs text-gray-500">
-            <p class="font-bold mb-2">📊 使用データ</p>
-            <p class="mb-1">このアプリは以下のGTFSオープンデータを使用しています：</p>
-            <ul class="list-disc list-inside ml-2 space-y-1">
-              <li>東陽バス（株）- OTTOP提供</li>
-              <li>沖縄バス（株）- OTTOP提供</li>
-            </ul>
-            <p class="mt-2 text-gray-400">
-              データ提供：<a href="https://www.ottop.org/" target="_blank" class="text-blue-500 hover:underline">特定非営利活動法人OTTOP</a><br>
-              ライセンス：<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" class="text-blue-500 hover:underline">CC BY 4.0</a>
-            </p>
-            <p class="mt-2 text-xs text-gray-400">
-              生成日時: ${BUS_DATA.generated_at ? new Date(BUS_DATA.generated_at).toLocaleString('ja-JP') : '-'}
-            </p>
+          <!-- このサイトについて -->
+          <div id="about-section" class="mt-8 bg-white rounded-xl shadow p-5">
+            <button 
+              onclick="toggleAbout()"
+              class="w-full flex items-center justify-between text-left"
+            >
+              <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                このサイトについて・留意事項
+              </h2>
+              <svg class="w-5 h-5 text-gray-400 transition-transform ${state.showAbout ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+
+            ${state.showAbout ? `
+              <div class="mt-4 space-y-4 text-sm text-gray-700 leading-relaxed animate-slide-down">
+                
+                <!-- サイトの目的 -->
+                <div class="border-l-4 border-blue-500 pl-4">
+                  <h3 class="font-bold text-gray-800 mb-2">🚌 このサイトの目的</h3>
+                  <p>このサイトは、特定非営利活動法人OTTOPが公開していただいているGTFS（標準的なバス情報フォーマット）情報等から、<strong>個人で作成</strong>しています。</p>
+                  <p class="mt-2">Googleマップや各種乗り換え案内のサイト等がありますが、個人的にスマホからもっと使いやすいサイトが欲しいなと思い、生成AI等の力も借りながら、<strong>趣味で実験的に作成</strong>しているものです。</p>
+                  <p class="mt-2">私は通勤で毎日路線バスに乗っています。乗るバス停が58号線にあり、ありがたいことに職場へ行けるバスは複数あります。逆にそのおかげで、どのバスに乗れば職場につけるのか、わかりづらいため、<strong>シンプルに自分が乗るバス停、降りるバス停が明確になっている場合に、簡単に検索できるサイト</strong>が欲しくこのサイトを作成しています。</p>
+                </div>
+
+                <!-- 現在の対応状況 -->
+                <div class="border-l-4 border-green-500 pl-4">
+                  <h3 class="font-bold text-gray-800 mb-2">✅ 現在の対応状況</h3>
+                  <p><strong>対応済み：</strong></p>
+                  <ul class="list-disc list-inside ml-2 mt-1 space-y-1">
+                    <li>東陽バス（株）</li>
+                    <li>沖縄バス（株）</li>
+                  </ul>
+                  <p class="mt-2"><strong>未対応（GTFSデータ非公開）：</strong></p>
+                  <ul class="list-disc list-inside ml-2 mt-1 space-y-1">
+                    <li>那覇バス</li>
+                    <li>琉球バス交通</li>
+                  </ul>
+                  <p class="mt-2 text-amber-700">※ 現在、那覇バスさんと琉球バスさんにGTFSデータの提供を問い合わせ中です。GTFSが公開されていないため、完璧なものにはなっていませんが、試験的に公開しています。</p>
+                </div>
+
+                <!-- 重要な注意事項 -->
+                <div class="border-l-4 border-red-500 pl-4">
+                  <h3 class="font-bold text-gray-800 mb-2">⚠️ 重要な注意事項</h3>
+                  <ul class="space-y-2">
+                    <li><strong>🕐 時刻表データのみ：</strong>このサイトは時刻表に基づいた情報です。<strong>リアルタイムの運行位置・遅延情報は含まれていません。</strong></li>
+                    <li><strong>🚫 運休・遅延は反映されません：</strong>事故、天候、交通渋滞、車両故障等による運休・遅延は反映されません。</li>
+                    <li><strong>📅 ダイヤ改正への対応：</strong>バス会社各社の路線、時刻、運賃等の変更について、正確に反映できない場合があります。</li>
+                    <li><strong>🔍 必ず公式情報をご確認ください：</strong>実際にバスをご利用の際は、必ず各バス会社の公式サイト、バスなび沖縄等で最新情報をご確認ください。</li>
+                  </ul>
+                </div>
+
+                <!-- 免責事項 -->
+                <div class="border-l-4 border-gray-400 pl-4">
+                  <h3 class="font-bold text-gray-800 mb-2">📋 免責事項</h3>
+                  <ul class="space-y-2 text-xs">
+                    <li>本サイトの情報の正確性、完全性、有用性について、いかなる保証もいたしません。</li>
+                    <li>本サイトの情報を利用したことにより生じたいかなる損害についても、一切の責任を負いません。</li>
+                    <li>完全に自分が個人で使うために作っているため、万人受けするサイトにはならないかもしれません。</li>
+                    <li>サーバーも無料で使用できるGitHubを使わせてもらっています。予告なくサービスを停止する場合があります。</li>
+                  </ul>
+                </div>
+
+                <!-- プライバシー -->
+                <div class="border-l-4 border-purple-500 pl-4">
+                  <h3 class="font-bold text-gray-800 mb-2">🔒 プライバシー</h3>
+                  <p>本サイトは、<strong>個人情報を一切収集していません。</strong>検索履歴や位置情報などのデータは保存されません。</p>
+                </div>
+
+                <!-- データ提供元 -->
+                <div class="border-l-4 border-cyan-500 pl-4">
+                  <h3 class="font-bold text-gray-800 mb-2">📊 データ提供元</h3>
+                  <p>データ提供：<a href="https://www.ottop.org/" target="_blank" class="text-blue-600 hover:underline font-semibold">特定非営利活動法人OTTOP</a></p>
+                  <p class="mt-1">ライセンス：<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" class="text-blue-600 hover:underline">CC BY 4.0</a></p>
+                  <p class="mt-2 text-xs text-gray-500">生成日時: ${BUS_DATA.generated_at ? new Date(BUS_DATA.generated_at).toLocaleString('ja-JP') : '-'}</p>
+                </div>
+
+                <!-- 公式リンク -->
+                <div class="border-l-4 border-orange-500 pl-4">
+                  <h3 class="font-bold text-gray-800 mb-2">🔗 公式情報・リアルタイム情報</h3>
+                  <p>正確な運行情報は、以下の公式サイトをご確認ください：</p>
+                  <ul class="mt-2 space-y-1">
+                    <li>🚍 <a href="https://www.busnavi-okinawa.com/" target="_blank" class="text-blue-600 hover:underline">バスなび沖縄（リアルタイム位置情報）</a></li>
+                    <li>🚌 <a href="https://www.daiichibus.jp/" target="_blank" class="text-blue-600 hover:underline">東陽バス公式サイト</a></li>
+                    <li>🚌 <a href="https://okinawabus.com/" target="_blank" class="text-blue-600 hover:underline">沖縄バス公式サイト</a></li>
+                  </ul>
+                </div>
+
+                <!-- お問い合わせ -->
+                <div class="bg-blue-50 rounded-lg p-4 text-center">
+                  <p class="text-sm text-gray-700">バグ報告・ご要望などございましたら、お気軽にお知らせください</p>
+                  <p class="text-xs text-gray-500 mt-2">※ 個人運営のため、対応にお時間をいただく場合があります</p>
+                </div>
+
+              </div>
+            ` : ''}
           </div>
+
+          <!-- フッター -->
+          <div class="mt-6 text-center text-xs text-gray-400">
+            <p>© 2026 沖縄バスナビ（個人運営）</p>
+            <p class="mt-1">Powered by OTTOP GTFS Data & GitHub Pages</p>
+          </div>
+
         </div>
       `;
     }
